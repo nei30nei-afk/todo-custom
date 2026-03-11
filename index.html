@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>冒険ToDo配布版 🌟 ガチャ＆ポイント連動</title>
+    <title>冒険ToDo配布版 🌟 宝箱ギミック復活</title>
     <style>
         :root { --primary-bg: #E8F5E9; --primary-main: #81C784; --primary-dark: #2E7D32; --accent: #FF80AB; }
         body.theme-green { --primary-bg: #E8F5E9; --primary-main: #81C784; --primary-dark: #2E7D32; }
@@ -20,6 +20,11 @@
 
         #task-area { height: 82vh; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 10px 5px; box-sizing: border-box; }
         #task-title { font-size: 3.5vh; font-weight: bold; color: var(--primary-dark); text-align: center; }
+
+        /* 宝箱エリア：時間連動でサイズが変わる */
+        .img-box { height: 25vh; width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        #task-img { height: 100%; width: auto; transition: 1s linear; }
+
         #timer { font-size: 8vh; font-weight: bold; color: #D32F2F; background: white; padding: 5px 20px; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         .btn-done { background: var(--primary-main); color: white; border: none; width: 85%; height: 10vh; font-size: 4vh; font-weight: bold; border-radius: 20px; box-shadow: 0 5px var(--primary-dark); cursor: pointer; }
 
@@ -27,28 +32,25 @@
         #pause-btn { background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 10px; font-size: 1.8vh; font-weight: bold; box-shadow: 0 3px #C51162; }
         #config-btn { position: absolute; top: 8px; right: 8px; background: none; border: none; font-size: 3.5vh; cursor: pointer; opacity: 0.3; }
 
-        /* クリア画面 */
+        /* ガチャ・クリア画面は前回同様 */
         #congrats-layer { position: fixed; inset: 0; background: rgba(255,255,255,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100; text-align: center; }
         .pika-text { font-size: 5vh; font-weight: bold; color: #E65100; animation: pika 0.8s infinite; margin: 15px; }
 
-        /* ガチャオーバーレイ */
         #gacha-overlay { display: none; position: fixed; inset: 0; background: #FFF9C4; z-index: 200; flex-direction: column; align-items: center; justify-content: center; }
         .machine-body { width: 180px; height: 240px; background: #EF5350; border-radius: 20px; position: relative; border: 4px solid #B71C1C; }
         .machine-glass { width: 140px; height: 120px; background: rgba(255,255,255,0.7); border-radius: 50% 50% 0 0; position: absolute; top: 10px; left: 20px; overflow: hidden; }
         .handle-unit { width: 60px; height: 60px; background: #9E9E9E; border: 4px solid #424242; border-radius: 50%; position: absolute; bottom: 40px; left: 60px; transition: transform 0.6s; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .handle-unit::after { content: ''; width: 40px; height: 10px; background: #424242; border-radius: 5px; }
         #capsule-obj { display: none; width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(to bottom, #FFEB3B 50%, #FFF 50%); position: absolute; bottom: 40px; cursor: pointer; border: 2px solid #333; animation: drop 0.5s ease-out forwards; }
-        @keyframes drop { 0% { transform: translateY(0) scale(0); } 100% { transform: translateY(110px) scale(1.4); } }
+        
+        #ticket-screen { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 300; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; }
+        #ticket-card { width: 80%; background: white; color: #333; padding: 20px; border-radius: 20px; border: 6px dashed #FF9800; }
 
-        /* 設定画面 */
         #config-modal { position: fixed; inset: 0; background: white; z-index: 500; padding: 20px; overflow-y: auto; display: none; }
         .config-item { margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 8px; }
-        label { display: block; font-weight: bold; font-size: 12px; color: #666; }
         input, select, textarea { width: 100%; padding: 10px; font-size: 16px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 8px; }
 
-        #ticket-screen { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 300; flex-direction: column; align-items: center; justify-content: center; color: white; }
-        #ticket-card { width: 80%; background: white; color: #333; padding: 20px; border-radius: 20px; border: 6px dashed #FF9800; text-align: center; }
-
+        @keyframes drop { 0% { transform: translateY(0) scale(0); } 100% { transform: translateY(110px) scale(1.4); } }
         @keyframes pika { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
     </style>
 </head>
@@ -62,6 +64,7 @@
 
     <div id="task-area">
         <div id="task-title">準備中...</div>
+        <div class="img-box"><img id="task-img" src="https://i.imgur.com/doOjZrX.png"></div>
         <div id="timer">00:00</div>
         <button class="btn-done" onclick="completeTask()">できた！</button>
         <div class="bottom-controls">
@@ -117,12 +120,12 @@
             tasks: [{t:"おきる", s:600},{t:"ごはん", s:900},{t:"はをみがく", s:300}],
             prizes: [{n:"おかし", r:"ノーマル"},{n:"YouTube", r:"レア"}]
         };
-        let state = { idx: 0, left: 0, score: 0, tid: null, isPaused: false, spinning: false };
+        let state = { idx: 0, left: 0, total: 0, score: 0, tid: null, isPaused: false, spinning: false };
 
         window.onload = () => {
-            const scfg = localStorage.getItem('child_todo_cfg');
+            const scfg = localStorage.getItem('child_todo_cfg_v4');
             if(scfg) config = JSON.parse(scfg);
-            const ss = localStorage.getItem('child_todo_score');
+            const ss = localStorage.getItem('child_todo_score_v4');
             state.score = ss ? parseInt(ss) : 0;
             
             document.body.className = config.theme;
@@ -138,21 +141,31 @@
         function startTask() {
             const t = config.tasks[state.idx];
             if(!t) { showCongrats(); return; }
-            state.left = t.s;
+            state.left = state.total = t.s;
             document.getElementById('task-title').innerText = `${state.idx+1}) ${t.t}`;
+            document.getElementById('task-img').style.display = 'block'; // 画像を表示
+            
             if(state.tid) clearInterval(state.tid);
             state.tid = setInterval(() => {
                 if(!state.isPaused && state.left > 0) {
                     state.left--;
                     const m = Math.floor(state.left/60), s = state.left%60;
                     document.getElementById('timer').innerText = `${m}:${s.toString().padStart(2,'0')}`;
+                    
+                    // 宝箱をどんどん小さくする
+                    let size = (state.left / state.total) * 100;
+                    document.getElementById('task-img').style.height = size + "%";
+                    
+                    if(state.left <= 0) {
+                        document.getElementById('task-img').style.display = 'none'; // 0秒で消える
+                    }
                 }
             }, 1000);
         }
 
         function completeTask() {
             state.score += state.left;
-            localStorage.setItem('child_todo_score', state.score);
+            localStorage.setItem('child_todo_score_v4', state.score);
             document.getElementById('display-score').innerText = state.score;
             state.idx++;
             startTask();
@@ -160,9 +173,7 @@
 
         function togglePause() {
             state.isPaused = !state.isPaused;
-            const btn = document.getElementById('pause-btn');
-            btn.innerText = state.isPaused ? "さいかい" : config.pauseName;
-            btn.className = state.isPaused ? "paused" : "";
+            document.getElementById('pause-btn').innerText = state.isPaused ? "さいかい" : config.pauseName;
         }
 
         function showCongrats() {
@@ -187,11 +198,8 @@
 
         function openReward() {
             state.score -= config.gachaCost;
-            localStorage.setItem('child_todo_score', state.score);
-            const rand = Math.random()*100;
-            let pool = rand<10 ? config.prizes.filter(x=>x.r==="Sレア") : rand<40 ? config.prizes.filter(x=>x.r==="レア") : config.prizes.filter(x=>x.r==="ノーマル");
-            if(pool.length === 0) pool = config.prizes;
-            const res = pool[Math.floor(Math.random()*pool.length)];
+            localStorage.setItem('child_todo_score_v4', state.score);
+            const res = config.prizes[Math.floor(Math.random()*config.prizes.length)];
             document.getElementById('ticket-screen').style.display = 'flex';
             document.getElementById('prize-name').innerText = res.n;
             document.getElementById('rare-label').innerText = (res.r || "ノーマル") + "！！";
@@ -210,12 +218,12 @@
             config.theme = document.getElementById('cfg-theme').value;
             config.gachaCost = parseInt(document.getElementById('cfg-gacha-cost').value);
             config.tasks = document.getElementById('cfg-tasks').value.split('\n').filter(l=>l).map(l=>{
-                const p = l.split(','); return {t:p[0], s:parseInt(p[1])||60};
+                const p = l.split(','); return {t:p[0].trim(), s:parseInt(p[1])||60};
             });
             config.prizes = document.getElementById('cfg-prizes').value.split('\n').filter(l=>l).map(l=>{
-                const p = l.split(','); return {n:p[0], r:p[1]||"ノーマル"};
+                const p = l.split(','); return {n:p[0].trim(), r:(p[1]||"ノーマル").trim()};
             });
-            localStorage.setItem('child_todo_cfg', JSON.stringify(config));
+            localStorage.setItem('child_todo_cfg_v4', JSON.stringify(config));
             location.reload();
         }
     </script>
