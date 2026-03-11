@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>冒険ToDo配布版 🌟 タスク連続進行仕様</title>
+    <title>冒険ToDo 🌟 完全版</title>
     <style>
         :root { --primary-bg: #E8F5E9; --primary-main: #81C784; --primary-dark: #2E7D32; --accent: #FF80AB; }
         body.theme-green { --primary-bg: #E8F5E9; --primary-main: #81C784; --primary-dark: #2E7D32; }
@@ -59,7 +59,7 @@
         <div class="img-box"><img id="task-img" src="https://i.imgur.com/doOjZrX.png"></div>
         <div id="timer">00:00</div>
         <button class="btn-done" onclick="completeTask()">できた！</button>
-        <div style="margin-bottom:10px; opacity:0.3; font-size:1.5vh;" onclick="if(confirm('リセット？')) location.reload()">リセット</div>
+        <div style="margin-bottom:10px; opacity:0.2; font-size:1.5vh;" onclick="if(confirm('リセット？')) resetProgress()">最初からやりなおす</div>
     </div>
 
     <div id="congrats-layer">
@@ -67,7 +67,7 @@
         <div id="final-pts" class="pika-text">0 pt</div>
         <div id="gacha-status" style="margin-bottom:15px; color:#555;"></div>
         <button id="exchange-btn" class="btn-done" style="width:75%;" onclick="startGacha()">🎁 ガチャをまわす</button>
-        <p style="margin-top:20px; font-size:2vh; color:#888;">またあした遊ぶときは<br>「さいよみこみ」してね！</p>
+        <p style="margin-top:20px; font-size:2vh; color:#888;">またあした遊ぶときは<br><b>「さいよみこみ（リロード）」</b>してね！</p>
     </div>
 
     <div id="gacha-overlay">
@@ -111,11 +111,11 @@
         let state = { idx: 0, left: 0, total: 0, score: 0, tid: null, spinning: false };
 
         window.onload = () => {
-            const scfg = localStorage.getItem('child_todo_v8_cfg');
+            const scfg = localStorage.getItem('child_todo_final_cfg');
             if(scfg) config = JSON.parse(scfg);
-            const ss = localStorage.getItem('child_todo_v8_score');
+            const ss = localStorage.getItem('child_todo_final_score');
             state.score = ss ? parseInt(ss) : 0;
-            const si = localStorage.getItem('child_todo_v8_idx');
+            const si = localStorage.getItem('child_todo_final_idx');
             state.idx = si ? parseInt(si) : 0;
 
             document.getElementById('display-name').innerText = config.name;
@@ -128,7 +128,6 @@
 
         function startTask() {
             const t = config.tasks[state.idx];
-            // 全タスク終了時のみポイント画面を出す
             if(!t) { showCongrats(true); return; }
             
             state.left = state.total = t.s;
@@ -149,14 +148,16 @@
         function completeTask() {
             state.score += state.left;
             state.idx++; 
-            localStorage.setItem('child_todo_v8_score', state.score);
-            localStorage.setItem('child_todo_v8_idx', state.idx);
+            localStorage.setItem('child_todo_final_score', state.score);
             document.getElementById('display-score').innerText = state.score;
             
-            // 次のタスクがあれば即座に開始、なければポイント画面へ
             if(state.idx < config.tasks.length) {
+                // まだタスクがあるなら進捗を保存して次へ
+                localStorage.setItem('child_todo_final_idx', state.idx);
                 startTask();
             } else {
+                // 全部終わったら、次は最初から始まるようにインデックスを0で保存
+                localStorage.setItem('child_todo_final_idx', 0);
                 showCongrats(true);
             }
         }
@@ -169,6 +170,11 @@
             const canGacha = state.score >= config.gachaCost;
             document.getElementById('exchange-btn').style.display = canGacha ? 'block' : 'none';
             document.getElementById('gacha-status').innerText = canGacha ? "" : `あと ${config.gachaCost - state.score} ptでガチャ！`;
+        }
+
+        function resetProgress() {
+            localStorage.setItem('child_todo_final_idx', 0);
+            location.reload();
         }
 
         function startGacha() { document.getElementById('gacha-overlay').style.display = 'flex'; }
@@ -185,7 +191,7 @@
 
         function openReward() {
             state.score -= config.gachaCost;
-            localStorage.setItem('child_todo_v8_score', state.score);
+            localStorage.setItem('child_todo_final_score', state.score);
             document.getElementById('display-score').innerText = state.score;
             const res = config.prizes[Math.floor(Math.random()*config.prizes.length)];
             document.getElementById('ticket-screen').style.display = 'flex';
@@ -199,7 +205,7 @@
             state.spinning = false;
             document.getElementById('capsule-obj').style.display = 'none';
             document.getElementById('gacha-handle').style.transform = "rotate(0deg)";
-            showCongrats(state.idx >= config.tasks.length);
+            showCongrats(true);
         }
 
         function openConfig() {
@@ -219,8 +225,8 @@
             config.prizes = document.getElementById('cfg-prizes').value.split('\n').filter(l=>l).map(l=>{
                 const p = l.split(','); return {n:p[0].trim(), r:(p[1]||"ノーマル").trim()};
             });
-            localStorage.setItem('child_todo_v8_cfg', JSON.stringify(config));
-            localStorage.setItem('child_todo_v8_idx', 0);
+            localStorage.setItem('child_todo_final_cfg', JSON.stringify(config));
+            localStorage.setItem('child_todo_final_idx', 0);
             location.reload();
         }
     </script>
