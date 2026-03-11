@@ -3,54 +3,66 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>冒険ToDoカスタム（画像ギミック版）</title>
+    <title>冒険ToDoカスタム 🌟 配布版</title>
     <style>
         :root {
             --primary-bg: #E8F5E9; --primary-main: #81C784; --primary-dark: #2E7D32; --accent: #FF80AB;
         }
+        /* テーマカラー設定 */
         body.theme-green { --primary-bg: #E8F5E9; --primary-main: #81C784; --primary-dark: #2E7D32; }
         body.theme-pink  { --primary-bg: #FCE4EC; --primary-main: #F06292; --primary-dark: #880E4F; }
         body.theme-blue  { --primary-bg: #E1F5FE; --primary-main: #4FC3F7; --primary-dark: #01579B; }
         body.theme-yellow{ --primary-bg: #FFFDE7; --primary-main: #FFF176; --primary-dark: #F57F17; }
 
-        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: sans-serif; background: var(--primary-bg); transition: 0.3s; }
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: sans-serif; background: var(--primary-bg); transition: 0.3s; touch-action: manipulation; }
+        body { display: flex; flex-direction: column; }
         
-        #clock-area { height: 20vh; background: white; border-bottom: 4px solid var(--primary-main); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        /* 画面比率 1:3 */
+        #clock-area { height: 25vh; background: white; border-bottom: 4px solid var(--primary-main); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 10; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        #task-area { height: 75vh; display: flex; flex-direction: column; align-items: center; justify-content: space-around; padding: 10px; box-sizing: border-box; position: relative; }
+
         #clock { font-size: 8vh; font-weight: bold; color: var(--primary-dark); font-family: monospace; line-height: 1; }
-        #player-display { font-size: 2.5vh; font-weight: bold; color: var(--primary-dark); margin-top: 5px; }
+        #player-info { font-size: 2.5vh; font-weight: bold; color: var(--primary-dark); margin-top: 5px; }
 
-        #task-area { height: 80vh; display: flex; flex-direction: column; align-items: center; justify-content: space-around; padding: 15px; box-sizing: border-box; position: relative; }
-
-        #task-title { font-size: 4vh; font-weight: bold; color: var(--primary-dark); text-align: center; margin-bottom: 5px; }
+        #task-title { font-size: 4vh; font-weight: bold; color: var(--primary-dark); text-align: center; width: 90%; }
         
-        /* 画像ギミックエリア */
-        .img-box { height: 25vh; width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        #task-img { height: 100%; width: auto; transition: 1s linear; }
+        /* 画像ギミック */
+        .img-box { height: 20vh; width: 100%; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        #task-img { height: 120%; width: auto; transition: 1s linear; }
 
-        #timer { font-size: 10vh; font-weight: bold; color: #D32F2F; background: white; padding: 0 25px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin: 10px 0; }
+        #timer { font-size: 10vh; font-weight: bold; color: #D32F2F; background: white; padding: 0 20px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
-        .btn-done { background: var(--primary-main); color: white; border: none; width: 85%; padding: 18px; font-size: 4.5vh; font-weight: bold; border-radius: 25px; box-shadow: 0 6px var(--primary-dark); cursor: pointer; }
+        .btn-done { background: var(--primary-main); color: white; border: none; width: 80%; padding: 15px; font-size: 4vh; font-weight: bold; border-radius: 20px; box-shadow: 0 6px var(--primary-dark); cursor: pointer; z-index: 5; }
         .btn-done:active { transform: translateY(4px); box-shadow: 0 2px var(--primary-dark); }
 
-        #pause-btn { position: absolute; bottom: 15px; left: 15px; background: var(--accent); color: white; border: none; padding: 8px 15px; border-radius: 12px; font-size: 2vh; font-weight: bold; box-shadow: 0 4px #C51162; }
+        #pause-btn { position: absolute; bottom: 15px; left: 15px; background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 12px; font-size: 2vh; font-weight: bold; box-shadow: 0 4px #C51162; cursor: pointer; }
         #pause-btn.paused { background: #9E9E9E; box-shadow: 0 4px #616161; }
-        #config-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 4vh; cursor: pointer; opacity: 0.5; }
+        #config-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 4vh; cursor: pointer; opacity: 0.3; }
 
+        /* クリア画面 */
         #congrats-layer { position: fixed; inset: 0; background: rgba(255,255,255,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100; text-align: center; }
-        .pika-text { font-size: 5vh; font-weight: bold; color: #E65100; animation: pika 0.8s infinite; margin: 15px; }
+        .pika-text { font-size: 6vh; font-weight: bold; color: #E65100; animation: pika 0.8s infinite; margin: 20px; }
+        .exchange-btn { background: #FF9800; color: white; border: none; padding: 20px; border-radius: 15px; font-size: 3.5vh; font-weight: bold; box-shadow: 0 6px #E65100; animation: pika 1s infinite; cursor: pointer; }
 
-        #config-modal { position: fixed; inset: 0; background: white; z-index: 200; padding: 20px; overflow-y: auto; display: none; }
+        /* 設定画面 */
+        #config-modal { position: fixed; inset: 0; background: white; z-index: 500; padding: 20px; overflow-y: auto; display: none; }
         .config-item { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         label { display: block; font-weight: bold; margin-bottom: 5px; color: #555; font-size: 14px; }
-        input, select, textarea { width: 100%; padding: 10px; font-size: 16px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 5px; }
+        input, select, textarea { width: 100%; padding: 12px; font-size: 16px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 8px; }
         .save-btn { background: #4CAF50; color: white; border: none; padding: 15px; width: 100%; font-size: 20px; font-weight: bold; border-radius: 10px; margin-top: 15px; }
 
-        #gacha-overlay, #ticket-screen { position: fixed; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 300; }
-        #gacha-overlay { background: #FFF9C4; }
-        #ticket-screen { background: rgba(0,0,0,0.9); color: white; }
-        #ticket-card { width: 80%; background: white; color: #333; padding: 25px; border-radius: 20px; border: 8px dashed #FF9800; text-align: center; }
+        /* ガチャ・チケット演出（2人版のロジック継承） */
+        #gacha-overlay { display: none; position: fixed; inset: 0; background: #FFF9C4; z-index: 200; flex-direction: column; align-items: center; justify-content: center; }
+        #lever-container { width: 90px; height: 90px; background: #9E9E9E; border-radius: 50%; border: 5px solid #616161; display: flex; align-items: center; justify-content: center; transition: 0.5s; cursor: pointer; }
+        .lever-spin { transform: rotate(360deg); }
+        #ticket-screen { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 300; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; }
+        #ticket-card { width: 80%; background: white; color: #333; padding: 25px; border-radius: 20px; border: 8px dashed #FF9800; }
+        .rare-sparkle { animation: pika-light 0.5s infinite; border-color: #4FC3F7 !important; }
+        .srare-sparkle { animation: pika-strong 0.3s infinite; border-color: #FFD54F !important; box-shadow: 0 0 40px #FFD54F; }
 
         @keyframes pika { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        @keyframes pika-light { 0%, 100% { background: white; } 50% { background: #E1F5FE; } }
+        @keyframes pika-strong { 0%, 100% { background: #FFF176; } 50% { background: #FFD54F; } }
     </style>
 </head>
 <body class="theme-green">
@@ -58,24 +70,22 @@
     <div id="clock-area">
         <button id="config-btn" onclick="openConfig()">⚙</button>
         <div id="clock">00:00:00</div>
-        <div id="player-display"><span id="display-name">冒険者</span>: <span id="display-score">0</span> pt</div>
+        <div id="player-info"><span id="display-name">冒険者</span>: <span id="display-score">0</span> pt</div>
     </div>
 
     <div id="task-area">
-        <div id="task-title">タスクを読み込み中...</div>
-        <div class="img-box">
-            <img id="task-img" src="https://i.imgur.com/doOjZrX.png">
-        </div>
+        <div id="task-title">読み込み中...</div>
+        <div class="img-box"><img id="task-img" src="https://i.imgur.com/doOjZrX.png"></div>
         <div id="timer">00:00</div>
         <button class="btn-done" onclick="completeTask()">できた！</button>
         <button id="pause-btn" onclick="togglePause()">ストップ</button>
     </div>
 
     <div id="congrats-layer">
-        <h2 id="finish-msg">ぜんぶできた！！</h2>
+        <h2 id="finish-msg" style="font-size:4vh; margin:0;">ぜんぶできた！！</h2>
         <div id="final-pts" class="pika-text">0 pt</div>
-        <button id="gacha-btn" class="btn-done" style="background:#FF9800; display:none;" onclick="startGacha()">🎁 ガチャをまわす！</button>
-        <button onclick="location.reload()" style="margin-top:20px; background:none; border:none; text-decoration:underline;">あしたもがんばる</button>
+        <button id="exchange-btn" class="exchange-btn" onclick="startGacha()">🎁 ガチャをまわす！</button>
+        <button onclick="location.reload()" style="margin-top:30px; background:none; border:none; text-decoration:underline; font-size:18px;">あしたもがんばる</button>
     </div>
 
     <div id="config-modal">
@@ -83,58 +93,55 @@
         <div class="config-item"><label>なまえ</label><input type="text" id="cfg-name"></div>
         <div class="config-item"><label>テーマカラー</label><select id="cfg-theme"><option value="theme-green">グリーン</option><option value="theme-pink">ピンク</option><option value="theme-blue">ブルー</option><option value="theme-yellow">イエロー</option></select></div>
         <div class="config-item"><label>一時停止ボタンの名称</label><input type="text" id="cfg-pause-name"></div>
-        <div class="config-item"><label>画像URL（空欄で宝箱になります）</label><input type="text" id="cfg-img-url" placeholder="https://..."></div>
         <div class="config-item"><label>クリア時のメッセージ</label><input type="text" id="cfg-finish-msg"></div>
-        <div class="config-item"><label>ガチャのコスト</label><input type="number" id="cfg-gacha-cost"></div>
+        <div class="config-item"><label>ガチャ出現に必要なポイント</label><input type="number" id="cfg-gacha-cost"></div>
         <div class="config-item"><label>タスク (名前,秒数)</label><textarea id="cfg-tasks" rows="5"></textarea></div>
         <div class="config-item"><label>ごほうび (名前,レア度)</label><textarea id="cfg-prizes" rows="5"></textarea></div>
         <button class="save-btn" onclick="saveConfig()">保存してスタート！</button>
-        <button onclick="closeConfig()" style="width:100%; margin-top:10px; background:#ccc; border:none; padding:10px; border-radius:10px;">キャンセル</button>
+        <button onclick="closeConfig()" style="width:100%; margin-top:10px; background:#ccc; border:none; padding:10px; border-radius:10px;">もどる</button>
     </div>
 
     <div id="gacha-overlay">
         <h1 style="color:#D84315;">ドキドキガチャ</h1>
-        <div id="gacha-status" style="font-size:3vh; margin:20px;">レバーをまわしてね！</div>
-        <button class="btn-done" id="lever" onclick="spinGacha()">ぐるぐる！</button>
+        <div id="lever-container" onclick="spinLever()"><div style="width:70px; height:15px; background:#424242; border-radius:10px;"></div></div>
+        <p style="margin-top:20px; font-weight:bold;">レバーをまわしてね！</p>
     </div>
 
     <div id="ticket-screen">
+        <h2 id="rare-label" style="font-size:4vh; margin-bottom:10px;"></h2>
         <div id="ticket-card">
             <p>☆☆ ごほうびチケット ☆☆</p>
-            <h1 id="prize-name" style="font-size:5vh; margin:20px 0;"></h1>
-            <p id="prize-rare"></p>
+            <h1 id="prize-name" style="font-size:4vh; margin:15px 0;"></h1>
         </div>
-        <button class="btn-done" style="margin-top:30px;" onclick="location.reload()">またあした！</button>
+        <button class="btn-done" style="margin-top:30px; width:60%;" onclick="location.reload()">またあした！</button>
     </div>
 
     <script>
         let config = {
-            name: "冒険者", theme: "theme-green", pauseName: "かか", 
-            imgUrl: "https://i.imgur.com/doOjZrX.png",
+            name: "冒険者", theme: "theme-green", pauseName: "かか",
             finishMsg: "ぜんぶできた！！", gachaCost: 5000,
             tasks: [{t:"おきる", s:600},{t:"ごはん", s:900},{t:"はをみがく", s:300}],
-            prizes: [{n:"お菓子", r:"ノーマル"},{n:"YouTube 10分", r:"レア"}]
+            prizes: [{n:"YouTube 10分", r:"ノーマル"},{n:"すきなジュース", r:"レア"},{n:"100円ショップ", r:"Sレア"}]
         };
 
         let state = { idx: 0, left: 0, total: 0, score: 0, tid: null, isPaused: false };
 
-        window.onload = () => { loadAll(); updateClock(); setInterval(updateClock, 1000); startTask(); };
+        window.onload = () => { load(); updateClock(); setInterval(updateClock, 1000); startTask(); };
         function updateClock() { document.getElementById('clock').innerText = new Date().toLocaleTimeString('ja-JP'); }
 
-        function loadAll() {
-            const saved = localStorage.getItem('adv_custom_v2_cfg');
-            if(saved) config = JSON.parse(saved);
-            const savedScore = localStorage.getItem('adv_custom_v2_score');
+        function load() {
+            const savedCfg = localStorage.getItem('adv_dist_cfg');
+            if(savedCfg) config = JSON.parse(savedCfg);
+            const savedScore = localStorage.getItem('adv_dist_score');
             state.score = savedScore ? parseInt(savedScore) : 0;
-            applyTheme();
+            applyUI();
         }
 
-        function applyTheme() {
+        function applyUI() {
             document.body.className = config.theme;
             document.getElementById('display-name').innerText = config.name;
             document.getElementById('display-score').innerText = state.score;
             document.getElementById('pause-btn').innerText = config.pauseName;
-            document.getElementById('task-img').src = config.imgUrl || "https://i.imgur.com/doOjZrX.png";
         }
 
         function startTask() {
@@ -143,7 +150,7 @@
             if(!t) { showCongrats(); return; }
             state.left = state.total = t.s;
             state.isPaused = false;
-            document.getElementById('task-title').innerText = `${state.idx + 1}）${t.t}`;
+            document.getElementById('task-title').innerText = t.t;
             updatePauseBtn();
 
             state.tid = setInterval(() => {
@@ -151,15 +158,14 @@
                     state.left--;
                     const m = Math.floor(state.left/60), s = state.left%60;
                     document.getElementById('timer').innerText = `${m}:${s.toString().padStart(2,'0')}`;
-                    // 画像ギミック：比率に合わせて高さを変える
-                    document.getElementById('task-img').style.height = (100 * (state.left/state.total)) + "%";
+                    document.getElementById('task-img').style.height = (120 * (state.left/state.total)) + "%";
                 }
             }, 1000);
         }
 
         function completeTask() {
             state.score += state.left;
-            localStorage.setItem('adv_custom_v2_score', state.score);
+            localStorage.setItem('adv_dist_score', state.score);
             document.getElementById('display-score').innerText = state.score;
             state.idx++;
             startTask();
@@ -175,15 +181,14 @@
         function showCongrats() {
             document.getElementById('congrats-layer').style.display = 'flex';
             document.getElementById('finish-msg').innerText = config.finishMsg;
-            document.getElementById('final-pts').innerText = `合計 ${state.score} pt！！`;
-            if(state.score >= config.gachaCost) document.getElementById('gacha-btn').style.display = 'block';
+            document.getElementById('final-pts').innerText = `累計 ${state.score} pt！！`;
+            document.getElementById('exchange-btn').style.display = (state.score >= config.gachaCost) ? 'block' : 'none';
         }
 
         function openConfig() {
             document.getElementById('cfg-name').value = config.name;
             document.getElementById('cfg-theme').value = config.theme;
             document.getElementById('cfg-pause-name').value = config.pauseName;
-            document.getElementById('cfg-img-url').value = config.imgUrl;
             document.getElementById('cfg-finish-msg').value = config.finishMsg;
             document.getElementById('cfg-gacha-cost').value = config.gachaCost;
             document.getElementById('cfg-tasks').value = config.tasks.map(x => `${x.t},${x.s}`).join('\n');
@@ -196,34 +201,41 @@
             config.name = document.getElementById('cfg-name').value;
             config.theme = document.getElementById('cfg-theme').value;
             config.pauseName = document.getElementById('cfg-pause-name').value;
-            config.imgUrl = document.getElementById('cfg-img-url').value || "https://i.imgur.com/doOjZrX.png";
             config.finishMsg = document.getElementById('cfg-finish-msg').value;
             config.gachaCost = parseInt(document.getElementById('cfg-gacha-cost').value) || 5000;
             config.tasks = document.getElementById('cfg-tasks').value.split('\n').filter(l=>l).map(l => {
-                const [t, s] = l.split(','); return {t: t.trim(), s: parseInt(s)||60};
+                const parts = l.split(','); return {t: parts[0].trim(), s: parseInt(parts[1])||60};
             });
             config.prizes = document.getElementById('cfg-prizes').value.split('\n').filter(l=>l).map(l => {
-                const [n, r] = l.split(','); return {n: n.trim(), r: (r||"ノーマル").trim()};
+                const parts = l.split(','); return {n: parts[0].trim(), r: (parts[1]||"ノーマル").trim()};
             });
-            localStorage.setItem('adv_custom_v2_cfg', JSON.stringify(config));
+            localStorage.setItem('adv_dist_cfg', JSON.stringify(config));
             location.reload();
         }
 
         function startGacha() { document.getElementById('gacha-overlay').style.display = 'flex'; }
-        function spinGacha() {
-            document.getElementById('lever').disabled = true;
-            document.getElementById('gacha-status').innerText = "まわってるよ...";
-            setTimeout(() => {
-                state.score -= config.gachaCost;
-                localStorage.setItem('adv_custom_v2_score', state.score);
-                const rand = Math.random()*100;
-                let pool = rand<10 ? config.prizes.filter(x=>x.r==="Sレア") : rand<40 ? config.prizes.filter(x=>x.r==="レア") : config.prizes.filter(x=>x.r==="ノーマル");
-                if(pool.length === 0) pool = config.prizes;
-                const res = pool[Math.floor(Math.random()*pool.length)];
-                document.getElementById('prize-name').innerText = res.n;
-                document.getElementById('prize-rare').innerText = `レア度：${res.r}`;
-                document.getElementById('ticket-screen').style.display = 'flex';
-            }, 1500);
+        function spinLever() {
+            const lev = document.getElementById('lever-container');
+            if(lev.classList.contains('lever-spin')) return;
+            lev.classList.add('lever-spin');
+            setTimeout(showResult, 1000);
+        }
+
+        function showResult() {
+            state.score -= config.gachaCost;
+            localStorage.setItem('adv_dist_score', state.score);
+            const rand = Math.random()*100;
+            let pool = rand<10 ? config.prizes.filter(x=>x.r==="Sレア") : rand<40 ? config.prizes.filter(x=>x.r==="レア") : config.prizes.filter(x=>x.r==="ノーマル");
+            if(pool.length === 0) pool = config.prizes;
+            const res = pool[Math.floor(Math.random()*pool.length)];
+            
+            document.getElementById('ticket-screen').style.display = 'flex';
+            document.getElementById('prize-name').innerText = res.n;
+            const lbl = document.getElementById('rare-label');
+            const crd = document.getElementById('ticket-card');
+            lbl.innerText = res.r==="Sレア" ? "🌟 超レア 🌟" : res.r + "！！";
+            lbl.style.color = res.r==="Sレア"?"#FFD54F":res.r==="レア"?"#4FC3F7":"white";
+            crd.className = res.r==="Sレア"?"srare-sparkle":res.r==="レア"?"rare-sparkle":"";
         }
     </script>
 </body>
