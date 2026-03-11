@@ -3,157 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>冒険ToDo 🌟 配布用ガチャマシン版</title>
+    <title>冒険ToDo 🌟 ガチャマシン配布版</title>
     <style>
         :root { --primary-bg: #E8F5E9; --primary-main: #81C784; --primary-dark: #2E7D32; --accent: #FF80AB; }
         body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: sans-serif; background: var(--primary-bg); display: flex; flex-direction: column; }
         
-        /* スコア表示エリア */
-        #header-area { height: 15vh; background: white; border-bottom: 3px solid var(--primary-main); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        #clock-area { height: 15vh; background: white; border-bottom: 3px solid var(--primary-main); display: flex; flex-direction: column; align-items: center; justify-content: center; }
         #clock { font-size: 6vh; font-weight: bold; color: var(--primary-dark); font-family: monospace; }
-        #score-banner { font-size: 2vh; font-weight: bold; color: var(--primary-dark); }
+        #score-display { font-size: 2vh; font-weight: bold; color: var(--primary-dark); }
 
-        /* メインエリア */
-        #main-content { height: 85vh; display: flex; flex-direction: column; align-items: center; justify-content: space-around; padding: 10px; box-sizing: border-box; }
-        #title-text { font-size: 3.5vh; font-weight: bold; color: var(--primary-dark); }
-        #timer-box { font-size: 8vh; font-weight: bold; color: #D32F2F; background: white; padding: 10px 30px; border-radius: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .action-btn { background: var(--primary-main); color: white; border: none; width: 85%; height: 10vh; font-size: 4vh; font-weight: bold; border-radius: 25px; box-shadow: 0 6px var(--primary-dark); cursor: pointer; }
+        #task-area { height: 85vh; display: flex; flex-direction: column; align-items: center; justify-content: space-around; padding: 10px; box-sizing: border-box; }
+        #task-title { font-size: 3.5vh; font-weight: bold; color: var(--primary-dark); }
+        #timer { font-size: 8vh; font-weight: bold; color: #D32F2F; background: white; padding: 10px 30px; border-radius: 20px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .btn-done { background: var(--primary-main); color: white; border: none; width: 85%; height: 10vh; font-size: 4vh; font-weight: bold; border-radius: 25px; box-shadow: 0 6px var(--primary-dark); cursor: pointer; }
 
-        /* ガチャ演出画面 */
-        #gacha-screen { display: none; position: fixed; inset: 0; background: #FFF9C4; z-index: 200; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        /* ガチャオーバーレイ */
+        #gacha-overlay { display: none; position: fixed; inset: 0; background: #FFF9C4; z-index: 200; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
         
-        /* ガチャマシン（CSS描画） */
-        .machine-body { width: 180px; height: 240px; background: #EF5350; border-radius: 20px; position: relative; border: 4px solid #B71C1C; }
-        .machine-glass { width: 140px; height: 120px; background: rgba(255,255,255,0.7); border-radius: 50% 50% 0 0; position: absolute; top: 10px; left: 20px; overflow: hidden; }
-        .handle-unit { width: 60px; height: 60px; background: #9E9E9E; border: 4px solid #424242; border-radius: 50%; position: absolute; bottom: 40px; left: 60px; transition: transform 0.6s; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .handle-unit::after { content: ''; width: 40px; height: 10px; background: #424242; border-radius: 5px; }
-        .exit-hole { width: 50px; height: 40px; background: #333; position: absolute; bottom: -5px; left: 65px; border-radius: 5px 5px 0 0; }
+        /* ガチャマシン本体（CSSで簡易描画） */
+        #gacha-machine { width: 200px; height: 260px; background: #EF5350; border-radius: 20px 20px 10px 10px; position: relative; border: 4px solid #B71C1C; margin-bottom: 20px; }
+        #gacha-glass { width: 160px; height: 140px; background: rgba(255,255,255,0.6); border-radius: 50% 50% 0 0; position: absolute; top: 10px; left: 20px; overflow: hidden; }
+        #handle { width: 60px; height: 60px; background: #9E9E9E; border: 4px solid #424242; border-radius: 50%; position: absolute; bottom: 40px; left: 70px; cursor: pointer; transition: transform 0.5s; display: flex; align-items: center; justify-content: center; }
+        #handle::after { content: ''; width: 40px; height: 8px; background: #424242; border-radius: 4px; }
+        #exit { width: 50px; height: 40px; background: #333; position: absolute; bottom: -5px; left: 75px; border-radius: 5px 5px 0 0; }
 
-        /* カプセルアニメーション */
-        #capsule-obj { display: none; width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(to bottom, #FF5252 50%, #FFF 50%); position: absolute; bottom: 40px; cursor: pointer; border: 2px solid #333; animation: drop 0.5s ease-out forwards; }
-        @keyframes drop { 0% { transform: translateY(0) scale(0); } 100% { transform: translateY(110px) scale(1.4); } }
+        /* カプセル */
+        #capsule { display: none; width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(to bottom, #FFEB3B 50%, #FFF 50%); position: absolute; bottom: 50px; cursor: pointer; animation: pop 0.5s ease-out forwards; border: 2px solid #333; }
+        @keyframes pop { 0% { transform: translateY(0) scale(0); } 100% { transform: translateY(120px) scale(1.5); } }
 
-        /* 結果発表チケット */
-        #result-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 300; flex-direction: column; align-items: center; justify-content: center; color: white; }
-        #reward-ticket { width: 80%; background: white; color: #333; padding: 30px; border-radius: 25px; border: 8px dashed #FF9800; text-align: center; }
-        .rank-S { color: #E91E63; font-size: 5vh; font-weight: bold; }
-        .rank-A { color: #FF9800; font-size: 4vh; }
-        .rank-B { color: #4CAF50; font-size: 3vh; }
+        /* 結果画面 */
+        #result-screen { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 300; flex-direction: column; align-items: center; justify-content: center; color: white; }
+        #ticket { width: 85%; background: white; color: #333; padding: 30px; border-radius: 25px; border: 8px dashed #FF9800; text-align: center; }
+        .rare-S { color: #E91E63; text-shadow: 0 0 10px #FF80AB; font-size: 5vh; }
+        .rare-A { color: #FF9800; font-size: 4vh; }
+        .rare-B { color: #4CAF50; font-size: 3vh; }
     </style>
 </head>
 <body>
 
-    <div id="header-area">
+    <div id="clock-area">
         <div id="clock">00:00:00</div>
-        <div id="score-banner">現在のスコア: <span id="val-score">0</span> pt</div>
+        <div id="score-display">今のスコア: <span id="current-score">0</span> pt</div>
     </div>
 
-    <div id="main-content">
-        <div id="title-text">読み込み中...</div>
-        <div id="timer-box">00:00</div>
-        <button class="action-btn" onclick="doComplete()">できた！</button>
-        <p style="color: #888;">ぜんぶ終わるとガチャがひけるよ！</p>
+    <div id="task-area">
+        <div id="task-title">クエスト準備中...</div>
+        <div id="timer">00:00</div>
+        <button class="btn-done" onclick="completeTask()">できた！</button>
+        <p style="color: #666;">全部おわるとガチャが回せるよ！</p>
     </div>
 
-    <div id="gacha-screen">
-        <h2 style="color:#D84315">ごほうびガチャ！</h2>
-        <div class="machine-body">
-            <div class="machine-glass">
-                <div style="position:absolute; top:20px; left:30px; width:25px; height:25px; background:#2196F3; border-radius:50%;"></div>
-                <div style="position:absolute; top:50px; left:80px; width:25px; height:25px; background:#FFEB3B; border-radius:50%;"></div>
-                <div style="position:absolute; top:15px; left:70px; width:25px; height:25px; background:#E91E63; border-radius:50%;"></div>
+    <div id="gacha-overlay">
+        <h1>ごほうびガチャ！</h1>
+        <div id="gacha-machine">
+            <div id="gacha-glass">
+                <div style="position:absolute; top:40px; left:30px; width:30px; height:30px; background:#2196F3; border-radius:50%;"></div>
+                <div style="position:absolute; top:60px; left:90px; width:30px; height:30px; background:#FFEB3B; border-radius:50%;"></div>
+                <div style="position:absolute; top:30px; left:70px; width:30px; height:30px; background:#E91E63; border-radius:50%;"></div>
             </div>
-            <div id="gacha-handle" class="handle-unit" onclick="spinGacha()"></div>
-            <div class="exit-hole"></div>
-            <div id="capsule-obj" onclick="openReward()"></div>
+            <div id="handle" onclick="spinHandle()"></div>
+            <div id="exit"></div>
+            <div id="capsule" onclick="openCapsule()"></div>
         </div>
-        <p id="hint-msg" style="font-weight:bold; margin-top:20px;">ハンドルを まわしてね！</p>
+        <p id="gacha-hint">ハンドルを まわしてね！</p>
     </div>
 
-    <div id="result-overlay">
-        <div id="reward-ticket">
-            <h2 id="txt-rarity"></h2>
-            <h1 id="txt-prize"></h1>
-            <hr>
-            <p>きょうも 1日よくがんばったね！</p>
+    <div id="result-screen">
+        <div id="ticket">
+            <h2 id="result-rarity"></h2>
+            <h1 id="result-prize"></h1>
+            <p>おめでとう！</p>
         </div>
-        <button class="action-btn" style="margin-top: 30px;" onclick="location.reload()">おしまい！</button>
+        <button class="btn-done" style="margin-top: 30px;" onclick="location.reload()">またあした！</button>
     </div>
 
     <script>
-        const myConfig = {
+        const config = {
             tasks: [{t:"おきる", s:600},{t:"ごはん", s:900},{t:"おきがえ", s:300}],
             prizes: [
                 {n: "おかし ひとつ", r: "ノーマル"},
                 {n: "YouTube 15分", r: "レア"},
-                {n: "特別なお出かけ！", r: "Sレア"}
+                {n: "新しいおもちゃ！", r: "Sレア"}
             ]
         };
 
-        let myState = { idx: 0, left: 0, score: 0, tid: null, isSpinning: false };
+        let state = { idx: 0, left: 0, score: 0, tid: null, spinning: false };
 
         window.onload = () => {
-            const saved = localStorage.getItem('adv_todo_score_v6');
-            myState.score = saved ? parseInt(saved) : 0;
-            document.getElementById('val-score').innerText = myState.score;
+            const ss = localStorage.getItem('todo_score_v5');
+            state.score = ss ? parseInt(ss) : 0;
+            document.getElementById('current-score').innerText = state.score;
             setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString('ja-JP'); }, 1000);
-            runTask();
+            startTask();
         };
 
-        function runTask() {
-            if(myState.tid) clearInterval(myState.tid);
-            const current = myConfig.tasks[myState.idx];
-            if(!current) { finishAll(); return; }
-            myState.left = current.s;
-            document.getElementById('title-text').innerText = `${myState.idx+1}. ${current.t}`;
-            myState.tid = setInterval(() => {
-                if(myState.left > 0) {
-                    myState.left--;
-                    const m = Math.floor(myState.left/60), s = myState.left%60;
-                    document.getElementById('timer-box').innerText = `${m}:${s.toString().padStart(2,'0')}`;
+        function startTask() {
+            if(state.tid) clearInterval(state.tid);
+            const t = config.tasks[state.idx];
+            if(!t) { showGachaButton(); return; }
+            state.left = t.s;
+            document.getElementById('task-title').innerText = `${state.idx+1}. ${t.t}`;
+            state.tid = setInterval(() => {
+                if(state.left > 0) {
+                    state.left--;
+                    const m = Math.floor(state.left/60), s = state.left%60;
+                    document.getElementById('timer').innerText = `${m}:${s.toString().padStart(2,'0')}`;
                 }
             }, 1000);
         }
 
-        function doComplete() {
-            myState.score += myState.left;
-            localStorage.setItem('adv_todo_score_v6', myState.score);
-            document.getElementById('val-score').innerText = myState.score;
-            myState.idx++;
-            runTask();
+        function completeTask() {
+            state.score += state.left;
+            localStorage.setItem('todo_score_v5', state.score);
+            document.getElementById('current-score').innerText = state.score;
+            state.idx++;
+            startTask();
         }
 
-        function finishAll() {
-            document.getElementById('main-content').innerHTML = `
-                <h1 style="color:var(--primary-dark)">コンプリート！</h1>
-                <div style="font-size:3vh; margin: 20px 0;">今日の獲得: ${myState.score} pt</div>
-                <button class="action-btn" onclick="document.getElementById('gacha-screen').style.display='flex'">🎁 ガチャをまわす</button>
+        function showGachaButton() {
+            document.getElementById('task-area').innerHTML = `
+                <h1 style="color:var(--primary-dark)">ぜんぶクリア！</h1>
+                <div style="font-size:3vh; margin-bottom:20px;">累計: ${state.score} pt</div>
+                <button class="btn-done" onclick="document.getElementById('gacha-overlay').style.display='flex'">🎁 ガチャをまわす</button>
             `;
         }
 
-        function spinGacha() {
-            if(myState.isSpinning) return;
-            myState.isSpinning = true;
-            document.getElementById('gacha-handle').style.transform = "rotate(360deg)";
+        function spinHandle() {
+            if(state.spinning) return;
+            state.spinning = true;
+            const handle = document.getElementById('handle');
+            handle.style.transform = "rotate(360deg)";
             
             setTimeout(() => {
-                document.getElementById('capsule-obj').style.display = 'block';
-                document.getElementById('hint-msg').innerText = "カプセルを タップして開けてね！";
-            }, 700);
+                document.getElementById('capsule').style.display = 'block';
+                document.getElementById('gacha-hint').innerText = "カプセルを タップしてね！";
+            }, 600);
         }
 
-        function openReward() {
-            const val = Math.random() * 100;
-            let targetRarity = val < 10 ? "Sレア" : val < 40 ? "レア" : "ノーマル";
-            let items = myConfig.prizes.filter(p => p.r === targetRarity);
-            if(items.length === 0) items = myConfig.prizes;
-            const finalResult = items[Math.floor(Math.random() * items.length)];
+        function openCapsule() {
+            const rand = Math.random() * 100;
+            // レア度判定ロジック
+            let targetRare = rand < 10 ? "Sレア" : rand < 40 ? "レア" : "ノーマル";
+            let pool = config.prizes.filter(p => p.r === targetRare);
+            if(pool.length === 0) pool = config.prizes;
+            const res = pool[Math.floor(Math.random() * pool.length)];
 
-            document.getElementById('result-overlay').style.display = 'flex';
-            const rEl = document.getElementById('txt-rarity');
-            rEl.innerText = finalResult.r;
-            rEl.className = finalResult.r === "Sレア" ? "rank-S" : finalResult.r === "レア" ? "rank-A" : "rank-B";
-            document.getElementById('txt-prize').innerText = finalResult.n;
+            document.getElementById('result-screen').style.display = 'flex';
+            const rEl = document.getElementById('result-rarity');
+            rEl.innerText = res.r;
+            rEl.className = res.r === "Sレア" ? "rare-S" : res.r === "レア" ? "rare-A" : "rare-B";
+            document.getElementById('result-prize').innerText = res.n;
         }
     </script>
 </body>
