@@ -29,7 +29,11 @@
         
         .controls { width: 90%; display: flex; flex-direction: column; gap: 10px; align-items: center; }
         .btn-done { background: var(--main); color: white; border: none; width: 100%; height: 9vh; font-size: 4vh; font-weight: bold; border-radius: 20px; box-shadow: 0 5px var(--dark); cursor: pointer; }
-        .btn-pause { background: #90A4AE; color: white; border: none; width: 60%; height: 6vh; font-size: 2.5vh; font-weight: bold; border-radius: 15px; box-shadow: 0 4px #546E7A; cursor: pointer; }
+        
+        /* --- ボタンの色の設定 --- */
+        /* 通常時：紫 */
+        .btn-pause { background: #9575CD; color: white; border: none; width: 60%; height: 6vh; font-size: 2.5vh; font-weight: bold; border-radius: 15px; box-shadow: 0 4px #673AB7; cursor: pointer; }
+        /* 停止中：前のオレンジを維持 */
         .btn-pause.active { background: #FF7043; box-shadow: 0 4px #D84315; }
 
         #congrats-layer { position: fixed; inset: 0; background: rgba(255,255,255,0.95); display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100; text-align: center; }
@@ -72,7 +76,7 @@
         
         <div class="controls">
             <button class="btn-done" onclick="completeTask()">できた！</button>
-            <button id="pause-btn" class="btn-pause" onclick="togglePause()">ママ</button>
+            <button id="pause-btn" class="btn-pause" onclick="togglePause()">ちょっとまって！</button>
         </div>
 
         <div style="margin-bottom:5px; opacity:0.4; font-size:1.6vh; color: var(--dark); text-decoration: underline;" onclick="if(confirm('ポイントと進捗をリセットしますか？')) resetProgress()">ポイントリセット</div>
@@ -124,7 +128,6 @@
         <div class="cfg-row"><label>ガチャ1回のコスト(pt)</label><input type="number" id="cfg-gacha-cost"></div>
         <div class="cfg-row"><label>タスク(名前,秒) ※1行に1つ</label><textarea id="cfg-tasks" rows="4"></textarea></div>
         <div class="cfg-row"><label>ごほうび(名前,レア度) ※1行に1つ</label>
-            <p style="font-size:1.2vh; color:#666;">※レア度は「ノーマル」「レア」「Sレア」のいずれか</p>
             <textarea id="cfg-prizes" rows="4"></textarea>
         </div>
         <button class="btn-done" style="width:100%; height:8vh;" onclick="saveConfig()">保存して再開</button>
@@ -132,9 +135,8 @@
     </div>
 
     <script>
-        // 初期のサンプル設定
         let config = {
-            name: "冒険者", theme: "theme-green", pauseName: "ママ", gachaCost: 1000,
+            name: "冒険者", theme: "theme-green", pauseName: "ちょっとまって！", gachaCost: 1000,
             tasks: [{t:"おきる", s:600},{t:"ごはん", s:900},{t:"はをみがく", s:300}],
             prizes: [
                 {n:"おかし", r:"ノーマル"}, {n:"YouTube 10分", r:"レア"}, {n:"新しいおもちゃ", r:"Sレア"}
@@ -143,12 +145,11 @@
         let state = { idx: 0, left: 0, total: 0, score: 0, tid: null, spinning: false, isPaused: false };
 
         window.onload = () => {
-            const scfg = localStorage.getItem('child_todo_v9_cfg');
+            const scfg = localStorage.getItem('child_todo_v11_cfg');
             if(scfg) config = JSON.parse(scfg);
-            
-            const ss = localStorage.getItem('child_todo_v9_score');
+            const ss = localStorage.getItem('child_todo_v11_score');
             state.score = ss ? parseInt(ss) : 0;
-            const si = localStorage.getItem('child_todo_v9_idx');
+            const si = localStorage.getItem('child_todo_v11_idx');
             state.idx = si ? parseInt(si) : 0;
 
             applyTheme();
@@ -161,20 +162,15 @@
         };
 
         function applyTheme() { document.body.className = config.theme; }
-
         function updateClock() { document.getElementById('clock').innerText = new Date().toLocaleTimeString('ja-JP'); }
 
         function startTask() {
             const t = config.tasks[state.idx];
             if(!t) { showCongrats(true); return; }
-            
             state.left = state.total = t.s;
             state.isPaused = false;
             updatePauseUI();
-            
             document.getElementById('task-title').innerText = `${state.idx+1}) ${t.t}`;
-            document.getElementById('task-img').style.display = 'block';
-            
             if(state.tid) clearInterval(state.tid);
             state.tid = setInterval(() => {
                 if(!state.isPaused && state.left > 0) {
@@ -182,15 +178,11 @@
                     const m = Math.floor(state.left/60), s = state.left%60;
                     document.getElementById('timer').innerText = `${m}:${s.toString().padStart(2,'0')}`;
                     document.getElementById('task-img').style.height = (state.left / state.total * 100) + "%";
-                    if(state.left <= 0) document.getElementById('task-img').style.display = 'none';
                 }
             }, 1000);
         }
 
-        function togglePause() {
-            state.isPaused = !state.isPaused;
-            updatePauseUI();
-        }
+        function togglePause() { state.isPaused = !state.isPaused; updatePauseUI(); }
 
         function updatePauseUI() {
             const btn = document.getElementById('pause-btn');
@@ -209,14 +201,13 @@
         function completeTask() {
             state.score += state.left;
             state.idx++; 
-            localStorage.setItem('child_todo_v9_score', state.score);
+            localStorage.setItem('child_todo_v11_score', state.score);
             document.getElementById('display-score').innerText = state.score;
-            
             if(state.idx < config.tasks.length) {
-                localStorage.setItem('child_todo_v9_idx', state.idx);
+                localStorage.setItem('child_todo_v11_idx', state.idx);
                 startTask();
             } else {
-                localStorage.setItem('child_todo_v9_idx', 0); // 次回は最初から
+                localStorage.setItem('child_todo_v11_idx', 0);
                 showCongrats(true);
             }
         }
@@ -231,15 +222,13 @@
         }
 
         function resetProgress() {
-            state.score = 0;
-            state.idx = 0;
-            localStorage.setItem('child_todo_v9_score', 0);
-            localStorage.setItem('child_todo_v9_idx', 0);
+            state.score = 0; state.idx = 0;
+            localStorage.setItem('child_todo_v11_score', 0);
+            localStorage.setItem('child_todo_v11_idx', 0);
             location.reload();
         }
 
         function startGacha() { document.getElementById('gacha-overlay').style.display = 'flex'; }
-
         function spinGacha() {
             if(state.spinning) return;
             state.spinning = true;
@@ -252,18 +241,13 @@
 
         function openReward() {
             state.score -= config.gachaCost;
-            localStorage.setItem('child_todo_v9_score', state.score);
+            localStorage.setItem('child_todo_v11_score', state.score);
             document.getElementById('display-score').innerText = state.score;
-
-            // 確率に基づいた抽選 (60:30:10)
             const r = Math.random() * 100;
             let targetRare = "ノーマル";
-            if(r > 90) targetRare = "Sレア";
-            else if(r > 60) targetRare = "レア";
-
+            if(r > 90) targetRare = "Sレア"; else if(r > 60) targetRare = "レア";
             const pool = config.prizes.filter(p => p.r === targetRare);
             const res = pool.length > 0 ? pool[Math.floor(Math.random()*pool.length)] : config.prizes[0];
-
             document.getElementById('ticket-screen').style.display = 'flex';
             document.getElementById('prize-name').innerText = res.n;
             document.getElementById('rare-label').innerText = res.r + "！！";
@@ -299,8 +283,8 @@
             config.prizes = document.getElementById('cfg-prizes').value.split('\n').filter(l=>l).map(l=>{
                 const p = l.split(','); return {n:p[0].trim(), r:(p[1]||"ノーマル").trim()};
             });
-            localStorage.setItem('child_todo_v9_cfg', JSON.stringify(config));
-            localStorage.setItem('child_todo_v9_idx', 0);
+            localStorage.setItem('child_todo_v11_cfg', JSON.stringify(config));
+            localStorage.setItem('child_todo_v11_idx', 0);
             location.reload();
         }
     </script>
